@@ -12,10 +12,12 @@
 
 
 
-#include "Arduboy.h"
+#include <Arduboy2.h>
+#include <ArduboyTones.h>
 #include "Collision.h"
 
-Arduboy arduboy;
+Arduboy2 arduboy;
+ArduboyTones sound(arduboy.audio.enabled);
 Collision collision;
 
 
@@ -35,7 +37,7 @@ int y = 0;
 char text[16];
 char initials[3];
 ///
-int score = 0;
+unsigned int score = 0;
 byte activeNum = 0;
 byte moveAmount = 3;
 const int unitSize = 3;
@@ -82,10 +84,10 @@ void setup() {
 
 void intro()
 {
-  arduboy.tunes.tone(987, 160);
+  sound.tone(987, 160);
   delay(160);
 
-  arduboy.tunes.tone(1318, 400);
+  sound.tone(1318, 400);
   delay(2000);
 }
 
@@ -95,7 +97,7 @@ void displayHighScores(byte file)
 
   arduboy.setTextSize(1);
 
-  byte y = 10;
+  byte y = 9;
   byte x = 24;
   // Each block of EEPROM has 10 high scores, and each high score entry
   // is 5 bytes long:  3 bytes for initials and two bytes for score.
@@ -128,13 +130,10 @@ void displayHighScores(byte file)
     initials[1] = (char)EEPROM.read(address + (5 * i) + 3);
     initials[2] = (char)EEPROM.read(address + (5 * i) + 4);
 
-    if (score > 0)
-    {
-      sprintf(text, "%c%c%c %u", initials[0], initials[1], initials[2], score);
-      arduboy.setCursor(x + 24, y + (i * 8));
-      arduboy.print(text);
-      //arduboy.display();
-    }
+    sprintf(text, "%c%c%c %u", initials[0], initials[1], initials[2], score);
+    arduboy.setCursor(x + 24, y + (i * 8));
+    arduboy.print(text);
+    //arduboy.display();
   }
   arduboy.display();
   boolean exitLoop = false;
@@ -154,7 +153,7 @@ void displayHighScores(byte file)
 //Function by nootropic design to add high scores
 void enterInitials()
 {
-  char index = 0;
+  byte index = 0;
 
   arduboy.clear();
 
@@ -186,28 +185,26 @@ void enterInitials()
     arduboy.drawLine(56 + (index * 8), 28, 56 + (index * 8) + 6, 28, 1);
     delay(150);
 
-    if (arduboy.pressed(RIGHT_BUTTON))
+    if (arduboy.pressed(LEFT_BUTTON))
     {
-      index--;
-      if (index < 0)
+      if (index > 0)
       {
-        index = 0;
+        index--;
       } else
       {
 
-        arduboy.tunes.tone(1046, 250);
+        sound.tone(1046, 250);
       }
     }
 
-    if (arduboy.pressed(LEFT_BUTTON))
+    if (arduboy.pressed(RIGHT_BUTTON))
     {
-      index++;
-      if (index > 2)
+      if (index < 2)
       {
-        index = 2;
+        index++;
       }  else {
 
-        arduboy.tunes.tone(1046, 250);
+        sound.tone(1046, 250);
       }
     }
 
@@ -215,7 +212,7 @@ void enterInitials()
     {
       initials[index]++;
 
-      arduboy.tunes.tone(523, 250);
+      sound.tone(523, 250);
       // A-Z 0-9 :-? !-/ ' '
       if (initials[index] == '0')
       {
@@ -239,7 +236,7 @@ void enterInitials()
     {
       initials[index]--;
 
-      arduboy.tunes.tone(523, 250);
+      sound.tone(523, 250);
       if (initials[index] == ' ') {
         initials[index] = '?';
       }
@@ -260,10 +257,10 @@ void enterInitials()
       {
         index++;
 
-        arduboy.tunes.tone(1046, 250);
+        sound.tone(1046, 250);
       } else {
 
-        arduboy.tunes.tone(1046, 250);
+        sound.tone(1046, 250);
         return;
       }
     }
@@ -371,7 +368,7 @@ void updateUnits() {
   }
 }
 void checkCollision() {
-  if (x < 0 | x > WIDTH - unitSize | y > HEIGHT - unitSize | y < 0) {
+  if (x < 0 || x > WIDTH - unitSize || y > HEIGHT - unitSize || y < 0) {
 
     delay(500);
     gameover = true;
@@ -391,7 +388,7 @@ void checkCollision() {
   }
 
   if (collision.collideRectRect(apple.x, apple.y, unitSize, unitSize, x, y, unitSize, unitSize)) {
-    arduboy.tunes.tone(800, 200);
+    sound.tone(800, 200);
     if (moveDelayReset == slowDelay)
       score += 5;
     if (moveDelayReset == medDelay)
@@ -419,16 +416,16 @@ void resetApple() {
 
 void updateHead() {
 
-  if (arduboy.pressed(RIGHT_BUTTON) & direct != LEFT) {
+  if (arduboy.pressed(RIGHT_BUTTON) && direct != LEFT) {
     direct = RIGHT;
   }
-  if (arduboy.pressed(LEFT_BUTTON) & direct != RIGHT) {
+  if (arduboy.pressed(LEFT_BUTTON) && direct != RIGHT) {
     direct = LEFT;
   }
-  if (arduboy.pressed(DOWN_BUTTON) & direct != UP) {
+  if (arduboy.pressed(DOWN_BUTTON) && direct != UP) {
     direct = DOWN;
   }
-  if (arduboy.pressed(UP_BUTTON) & direct != DOWN) {
+  if (arduboy.pressed(UP_BUTTON) && direct != DOWN) {
     direct = UP;
   }
 
@@ -555,7 +552,7 @@ void menuSelect() {
         currentSelected = 0;
 
       }
-      arduboy.tunes.tone(400, 200);
+      sound.tone(400, 200);
       delay(300);
     }
 
@@ -564,7 +561,7 @@ void menuSelect() {
       if (currentSelected < 0) {
         currentSelected = 2;
       }
-      arduboy.tunes.tone(400, 200);
+      sound.tone(400, 200);
       delay(300);
     }
     if (arduboy.pressed(A_BUTTON)) {
